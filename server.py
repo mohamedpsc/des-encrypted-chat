@@ -1,5 +1,6 @@
 import socket
 import threading
+import pyDes
 
 
 class server():
@@ -16,16 +17,19 @@ class server():
             self.socket.listen(1)
             # Accepting connection from client
             self.client_socket, self.client_addr = self.socket.accept()
-            # Receiving Messages from client on separate thread
-            threading.Thread(target=self.receive).start()
-            # Sending Messages as well as connection is still active
-            while self.running:
-                data = input()
-                # Ending Chat
-                if data != '':
-                    self.client_socket.send(data.encode())
-                if data == 'exit':
-                    self.kill()
+            if self.hand_shake():
+                # Initializing DES Encryption
+                self.des = pyDes.des(self.des_key, pyDes.CBC, "\0\0\0\0\0\0\0\0", pad=None, padmode=pyDes.PAD_PKCS5)
+                # Receiving Messages from client on separate thread
+                threading.Thread(target=self.receive).start()
+                # Sending Messages as well as connection is still active
+                while self.running:
+                    data = input()
+                    # Ending Chat
+                    if data != '':
+                        self.client_socket.send(self.des.encrypt(data))
+                    if data == 'exit':
+                        self.kill()
 
         # Ending Chat
         def kill(self):
@@ -36,12 +40,19 @@ class server():
         # Receive Messages from client
         def receive(self):
             while self.running:
-                data = self.client_socket.recv(1024).decode()
+                data = self.des.decrypt(self.client_socket.recv(1024))
                 if data in ['exit', '', None]:
                     # Chat Ended by Client
                     self.kill()
                 else:
                     print("client: " + data)
+
+        def hand_shake(self):
+            # TODO Send RSA Public Key to client AND WAIT FOR RESPOND
+            encrypted_des_key = self.client_socket.recv(1024).decode()
+            # TODO decrypt the received des key using RSA Decryption then Store the key to self.des_key
+            # return True if DES Key received and decrypted Successfully, else return false
+            return False
 
 
 if __name__ == '__main__':
