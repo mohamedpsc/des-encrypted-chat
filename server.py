@@ -49,10 +49,23 @@ class server():
 
         def hand_shake(self):
             # TODO Send RSA Public Key to client AND WAIT FOR RESPOND
-            encrypted_des_key = self.client_socket.recv(1024).decode()
-            # TODO decrypt the received des key using RSA Decryption then Store the key to self.des_key
-            # return True if DES Key received and decrypted Successfully, else return false
-            return False
+            import rsa 
+            server_public_key, server_private_key = rsa.newkeys(512)
+            self.client_socket.send(
+                server_public_key.save_pkcs1()
+            )
+            client_challenge = self.client_socket.recv(1024)
+            #send client challenge decrypted
+            self.client_socket.send(
+                rsa.decrypt(client_challenge, server_private_key)
+            )
+            
+            self.des_key = rsa.decrypt(
+                self.client_socket.recv(1024),
+                server_private_key
+            )
+            self.des_key = self.des_key.decode()
+            return True
 
 
 if __name__ == '__main__':

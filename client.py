@@ -49,7 +49,25 @@ class client():
     def hand_shake(self):
         # TODO GET Public Key of server
         # TODO Encrypt Des key using RCA Public key received from server and send it to the server
-        return False
+        import rsa 
+        server_public_key = self.my_socket.recv(1024)
+        server_public_key = rsa.PublicKey.load_pkcs1(server_public_key)
+        #Sending challenge
+        challenge = b'this is a challenge'
+        self.my_socket.send(
+            rsa.encrypt(challenge, server_public_key)
+        )
+        returned_challenge = self.my_socket.recv(1024)
+
+        if challenge == returned_challenge:
+            # sendng DES key
+            print("Sending DES KEY")
+            self.my_socket.send(
+                rsa.encrypt(self.des_key.encode(), server_public_key)
+            )
+            return True
+        else:
+            return False 
 
 def id_generator(size=8, chars=string.ascii_letters):
     return ''.join(random.choice(chars) for _ in range(size))
