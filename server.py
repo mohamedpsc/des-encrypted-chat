@@ -41,6 +41,7 @@ class server():
         def receive(self):
             while self.running:
                 data = self.des.decrypt(self.client_socket.recv(1024))
+                data = data.decode()
                 if data in ['exit', '', None]:
                     # Chat Ended by Client
                     self.kill()

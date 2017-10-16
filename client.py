@@ -39,7 +39,9 @@ class client():
     # Receive Messages from Server
     def receive(self):
         while self.running:
-            data = data = self.des.decrypt(self.my_socket.recv(1024))
+            data = self.des.decrypt(self.my_socket.recv(1024))
+            data = data.decode() 
+            
             if data in ['exit', '', None]:
                 # Chat Ended by Server
                 self.kill()
