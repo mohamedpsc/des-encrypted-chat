@@ -41,7 +41,8 @@ class server():
         def receive(self):
             while self.running:
                 data = self.des.decrypt(self.client_socket.recv(1024))
-                data = data.decode()
+                if isinstance(data, bytes):
+                    data = data.decode()
                 if data in ['exit', '', None]:
                     # Chat Ended by Client
                     self.kill()
@@ -49,7 +50,6 @@ class server():
                     print("client: " + data)
 
         def hand_shake(self):
-            # TODO Send RSA Public Key to client AND WAIT FOR RESPOND
             import rsa 
             server_public_key, server_private_key = rsa.newkeys(512)
             self.client_socket.send(
